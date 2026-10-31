@@ -1,0 +1,34 @@
+name: Issue Commenter
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  comment_on_issue:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on issue
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = context.payload.issue;
+            const label = context.payload.label ? context.payload.label.name : null;
+            if (!label) return;
+            let comment = '';
+            if (label === 'bug') {
+              comment = 'Thank you. We will fix it.';
+            } else if (label === 'feature') {
+              comment = 'Thank you, we will consider to include this feature.';
+            } else if (label === 'discussion') {
+              comment = 'Thanks for starting this discussion! We welcome community input.';
+            }
+            if (comment) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: comment
+              });
+            }
